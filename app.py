@@ -1,27 +1,25 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
-import requests
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import os
 
 app = FastAPI()
 
-# Autoriser ton site frontend
+# Autoriser CORS (ton frontend pourra appeler le backend)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # remplace par ton domaine si tu veux
+    allow_origins=["*"],  # tu pourras remplacer "*" par ton vrai domaine frontend
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-HF_TOKEN = os.environ.get("HF_TOKEN")  # Ton token Hugging Face caché
-API_URL = "https://api-inference.huggingface.co/models/TonPseudo/zoubir-ia"  # remplace par ton modèle exact
-
-class Message(BaseModel):
-    inputs: str
+@app.get("/")
+def read_root():
+    return {"message": "Backend Zoubir is running 🚀"}
 
 @app.post("/chat")
-def chat(msg: Message):
-    headers = {"Authorization": f"Bearer {HF_TOKEN}"}
-    response = requests.post(API_URL, headers=headers, json={"inputs": msg.inputs})
-    return response.json()
+async def chat(request: Request):
+    data = await request.json()
+    user_message = data.get("message", "")
+    # pour le moment on fait simple :
+    return {"reply": f"Tu as dit: {user_message}"}
